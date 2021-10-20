@@ -41,7 +41,7 @@ def current_conditions():
     import json
     from pandas import json_normalize
     st.sidebar.markdown("""---""")
-    st.sidebar.markdown("""## Current Space Weather Conditions ☂: """)
+    st.sidebar.markdown("""## Space Weather Conditions ☂: """)
     
     with urllib.request.urlopen('https://services.swpc.noaa.gov/json/goes/primary/xray-flares-latest.json') as fp:
         data = json.loads(fp.read().decode())
@@ -166,21 +166,21 @@ def run():
                 #MainMenu {visibility: hidden;}
                 footer {visibility: hidden;}
                 </style> """, unsafe_allow_html=True)
-
     # Do some css styling tricks here (e.g. remove the padding)
     # https://medium.com/ssense-tech/streamlit-tips-tricks-and-hacks-for-data-scientists-d928414e0c16
     padding = 1
     st.markdown(f""" <style>
                 .reportview-container .main .block-container{{
                 padding-top: {padding}rem;
-                margin-top: -1.5rem;
+                margin-top: -3.0rem;
+                max-width: 50rem;
                 padding-right: {padding}rem;
                 padding-left: {padding}rem;
                 padding-bottom: {padding}rem;
                 }} </style> """, unsafe_allow_html=True)
     st.markdown(f""" <style>
                 .reportview-container .css-1lcbmhc .block-container{{
-                margin-top: -1.0rem;
+                margin-top: -3.0rem;
                 }} </style> """, unsafe_allow_html=True)
     # Reduce the space in horizontal component
     st.markdown(f""" <style>
@@ -212,28 +212,6 @@ def run():
 
 
     current_conditions()
-
-    # Make the footer         
-    footer="""<style>
-.footer {
-position: fixed;
-bottom: 0;
-max-width: 100%;
-height: auto;
-background-color: white;
-color: black;
-text-align: center;
-}
-</style>
-<div class="footer">
-<a href="https://www.buymeacoffee.com/akouloumvako">
-<img src='data:image/png;base64,""" + """{}' class='img-fluid' width=300 height=45>
-<a/>
-</div>
-""".format(
-    img_to_bytes("buy_me_a_coffee.png")
-    )
-    st.sidebar.markdown(footer,unsafe_allow_html=True)
 
 if __name__ == "__main__":
     run()

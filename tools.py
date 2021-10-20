@@ -196,7 +196,7 @@ def aia_realtime():
             pfss = 'pfss'
         else:
             pfss = ''
-        left_column, right_column = st.beta_columns(2)
+        left_column, right_column = st.columns(2)
         image = Image.open(
                            requests.get('https://sdo.gsfc.nasa.gov/'
                            'assets/img/latest/f_211_193_171pfss_1024.jpg',
@@ -210,7 +210,7 @@ def aia_realtime():
                            )
         right_column.image(image, caption='')
 
-        one_, two_, three_, four_ = st.beta_columns(4)
+        one_, two_, three_, four_ = st.columns(4)
         image = Image.open(
                            requests.get('https://sdo.gsfc.nasa.gov/'
                            f'assets/img/latest/latest_1024_0171{pfss}.jpg',
@@ -236,7 +236,7 @@ def aia_realtime():
                            )
         four_.image(image, caption='')
 
-        one_, two_, three_, four_ = st.beta_columns(4)
+        one_, two_, three_, four_ = st.columns(4)
         image = Image.open(
                            requests.get('https://sdo.gsfc.nasa.gov/'
                            f'assets/img/latest/latest_1024_0094{pfss}.jpg',
@@ -289,7 +289,7 @@ def lasco_realtime():
     """
     View real-time coronagraphic images from SoHO/LASCO.
     """
-    left_column, right_column = st.beta_columns(2)
+    left_column, right_column = st.columns(2)
     image = Image.open(
                        requests.get('https://sohowww.nascom.nasa.gov/'
                        'data/realtime/c2/1024/latest.jpg',
