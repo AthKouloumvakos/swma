@@ -26,24 +26,26 @@ References
 * `SWPC's data service for GOES SXR JSON files <https://services.swpc.noaa.gov/json/goes/>`_
 """
 
-import os
 import argparse
-import urllib.request
 import json
+import os
+import urllib.request
 from collections import OrderedDict
+
+import astropy.units as u
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 # from datetime import datetime
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import matplotlib.ticker as mticker
-import astropy.units as u
+import pandas as pd
+import streamlit as st
+from pandas import json_normalize
 from sunpy.time import parse_time
 from sunpy.util.metadata import MetaDict
-import pandas as pd
-from pandas import json_normalize
-import streamlit as st
 
-url_sxr = "https://services.swpc.noaa.gov/json/goes/primary/xrays-?.json"
+url_sxr = 'https://services.swpc.noaa.gov/json/goes/primary/xrays-?.json'
+
 
 def _parse_json_file(mode):
     """
@@ -53,10 +55,11 @@ def _parse_json_file(mode):
     filepath : `str`
         The path or url to the file you want to parse.
     """
-    url = (url_sxr).replace('?',mode)
+    url = (url_sxr).replace('?', mode)
     with urllib.request.urlopen(url) as fp:
         data = json.loads(fp.read().decode())
     return data
+
 
 def _to_dataframe(data):
     # Convert the json data to Dataframe
@@ -73,7 +76,8 @@ def _to_dataframe(data):
                          ('flux', u.W/u.m**2),
                          ('wavelength', u.nm)])
     return result, MetaDict(
-        {'comments': "Merged time serie for 0.1-0.8nm & 0.05-0.4nm wavelengths"}), units
+        {'comments': 'Merged time serie for 0.1-0.8nm & 0.05-0.4nm wavelengths'}), units
+
 
 def _split_to_data(result, type_):
     dataframe_ = result[0]
@@ -85,6 +89,7 @@ def _split_to_data(result, type_):
         raise ValueError(f'Got unknown _split type "{type}"')
     return dataframe
 
+
 def plot_(result, mode='1-day', type_='GOES-Long_and_Short', plot_flares=False, outfile='', in_app=False,
           **plot_args):
     """
@@ -95,59 +100,59 @@ def plot_(result, mode='1-day', type_='GOES-Long_and_Short', plot_flares=False, 
     mode : `str`
         The mode of json file you want to process
     """
-    #plt.figure(dpi=150)
+    # plt.figure(dpi=150)
     fig, axes = plt.subplots()
     fig.set_size_inches(5.5, 5)
     if type_ == 'GOES-Long_and_Short':
         dataframe_long = _split_to_data(result, type_='GOES-Long')
         axes.plot(dataframe_long.index, dataframe_long['flux'],
                   marker='', color='red',
-                  linewidth=1, label="0.1-0.8nm", **plot_args)
+                  linewidth=1, label='0.1-0.8nm', **plot_args)
         dataframe_sort = _split_to_data(result, type_='GOES-Short')
         axes.plot(dataframe_sort.index, dataframe_sort['flux'],
                   marker='', color='blue',
-                  linewidth=1, label="0.05-0.4nm", **plot_args)
+                  linewidth=1, label='0.05-0.4nm', **plot_args)
     elif type_ == 'GOES-Long':
         dataframe_long = _split_to_data(result, type_='GOES-Long')
         axes.plot(dataframe_long.index, dataframe_long['flux'],
                   marker='', color='red',
-                  linewidth=1, label="0.1-0.8nm", **plot_args)
+                  linewidth=1, label='0.1-0.8nm', **plot_args)
     elif type_ == 'GOES-Short':
         dataframe_sort = _split_to_data(result, type_='GOES-Short')
         axes.plot(dataframe_sort.index, dataframe_sort['flux'],
                   marker='', color='blue',
-                  linewidth=1, label="0.05-0.4nm", **plot_args)
+                  linewidth=1, label='0.05-0.4nm', **plot_args)
     else:
         raise ValueError(f'Got unknown plot type "{type}"')
-    
+
     tstart, tend = result[0].index[0], result[0].index[-1]
     axes.set_title('NOAA - GOES Soft X-Ray Flux (1-minute average)')
-    axes.set_xlabel("Time [UT]")
-    axes.set_ylabel('Flux [Watt sm$^{-2}]$')
+    axes.set_xlabel('Time [UT]')
+    axes.set_ylabel('Flux [W/m$^2$]')
     axes.set_yscale('log')
     axes.set_ylim([1e-9, 1e-3])
     axes.set_xlim([tstart, tend])
-    
+
     axes.grid(True, which='minor', linewidth=0.5)
     axes.grid(True, which='major', linewidth=0.5)
     ymin, ymax = axes.get_ylim()
     xmin, xmax = axes.get_xlim()
     axes.legend(loc='upper left')
-    
+
     if plot_flares is True:
         # url = "https://services.swpc.noaa.gov/json/goes/primary/xray-flares-latest.json"
-        url = "https://services.swpc.noaa.gov/json/goes/primary/xray-flares-7-day.json"
+        url = 'https://services.swpc.noaa.gov/json/goes/primary/xray-flares-7-day.json'
         with urllib.request.urlopen(url) as url:
             data_flare = json.loads(url.read().decode())
         # If we want to add flare information:
-        # Convert the json data to Dataframe 
+        # Convert the json data to Dataframe
         result_flare = json_normalize(data_flare)
         for index, flare in result_flare.iterrows():
-            Time_Flare = pd.to_datetime(flare['max_time'],format="%Y-%m-%dT%H:%M:%SZ")
-            if Time_Flare<tstart:
+            Time_Flare = pd.to_datetime(flare['max_time'], format='%Y-%m-%dT%H:%M:%SZ')
+            if Time_Flare < tstart:
                 continue
             axes.plot([Time_Flare, Time_Flare], [1e-9, flare['max_xrlong']], marker='',
-                      color='black', linestyle='dashed', linewidth=1, label="Flare")
+                      color='black', linestyle='dashed', linewidth=1, label='Flare')
             axes.text(Time_Flare, 1.5*flare['max_xrlong'], flare['max_class'],
                       horizontalalignment='center',
                       verticalalignment='center')
@@ -164,13 +169,13 @@ def plot_(result, mode='1-day', type_='GOES-Long_and_Short', plot_flares=False, 
     ygrid[5].set_linewidth(1)
     ygrid[6].set_color('red')
     ygrid[6].set_linewidth(1)
-    
-    axes.xaxis.set_major_formatter(mdates.DateFormatter("%Y\n%b-%d\n%H:%M"))
+
+    axes.xaxis.set_major_formatter(mdates.DateFormatter('%Y\n%b-%d\n%H:%M'))
     fig.autofmt_xdate(bottom=0, rotation=0, ha='center')
 
     # Add a label at the classes lines
     ax2 = axes.twinx()
-    ax2.set_yscale("log")
+    ax2.set_yscale('log')
     ax2.set_ylim(ymin, ymax)
     labels = ['A', 'B', 'C', 'M', 'X']
     centers = np.logspace(-7.5, -3.5, len(labels))
@@ -179,19 +184,20 @@ def plot_(result, mode='1-day', type_='GOES-Long_and_Short', plot_flares=False, 
     ax2.set_yticklabels([])
     axes.get_shared_x_axes().join(axes, ax2)
     plt.tight_layout()
-    #ax2.annotate('@Last Update:' + datetime.now().strftime("%d/%m/%Y %H:%M"),
+    # ax2.annotate('@Last Update:' + datetime.now().strftime("%d/%m/%Y %H:%M"),
     #        xy=(10, 15), xycoords='figure pixels',fontsize=8, color=(0,0,0,0.5))
     # plt.show()
     if outfile != '':
-        save_path = os.path.join(outfile,f'GOES_SXR_latest_{mode}.png')
+        save_path = os.path.join(outfile, f'GOES_SXR_latest_{mode}.png')
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
-    
+
     if in_app:
         st.pyplot(fig)
     else:
         plt.show()
-    
+
     return plt
+
 
 def produce_plot(mode='1-day', plot_flares=False, in_app=False):
     """
@@ -211,9 +217,11 @@ def produce_plot(mode='1-day', plot_flares=False, in_app=False):
 # Check to see if this file is being executed as the "Main" python
 # script instead of being used as a module by some other python script
 # This allows us to use the module which ever way we want.
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-mode', '--mode', default='1-day',
-                        choices=['6-hour','1-day','3-day','7-day'])
+                        choices=['6-hour', '1-day', '3-day', '7-day'])
     args = parser.parse_args()
     produce_plot(mode=args.mode)
