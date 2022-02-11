@@ -25,24 +25,23 @@ References
 * `SWPC's data service for GOES SXR JSON files <https://services.swpc.noaa.gov/json/goes/>`_
 """
 
-import os
 import argparse
-import urllib.request
 import json
+import os
+import urllib.request
 from collections import OrderedDict
-# from datetime import datetime
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import matplotlib.ticker as mticker
+
 import astropy.units as u
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+import pandas as pd
+import streamlit as st
+from pandas import json_normalize
 from sunpy.time import parse_time
 from sunpy.util.metadata import MetaDict
-import pandas as pd
-from pandas import json_normalize
-import streamlit as st
 
-url_sxr = "https://services.swpc.noaa.gov/json/goes/primary/integral-protons-?.json"
+url_sxr = 'https://services.swpc.noaa.gov/json/goes/primary/integral-protons-?.json'
+
 
 def _parse_json_file(mode):
     """
@@ -52,10 +51,11 @@ def _parse_json_file(mode):
     filepath : `str`
         The path or url to the file you want to parse.
     """
-    url = (url_sxr).replace('?',mode)
+    url = (url_sxr).replace('?', mode)
     with urllib.request.urlopen(url) as fp:
         data = json.loads(fp.read().decode())
     return data
+
 
 def _to_dataframe(data):
     # Convert the json data to Dataframe
@@ -70,12 +70,14 @@ def _to_dataframe(data):
                          ('flux', u.W/u.m**2),
                          ('energy', u.MeV)])
     return result, MetaDict(
-        {'comments': "Merged time serie for 0.1-0.8nm & 0.05-0.4nm wavelengths"}), units
+        {'comments': 'Merged time serie for 0.1-0.8nm & 0.05-0.4nm wavelengths'}), units
+
 
 def _split_to_data(result, type_):
     dataframe_ = result[0]
     dataframe = dataframe_[dataframe_['energy'] == type_]
     return dataframe
+
 
 def plot_(result, mode='1-day', type_='GOES-Long_and_Short', outfile='', in_app=False,
           **plot_args):
@@ -87,35 +89,35 @@ def plot_(result, mode='1-day', type_='GOES-Long_and_Short', outfile='', in_app=
     mode : `str`
         The mode of json file you want to process
     """
-    #plt.figure(dpi=150)
+    # plt.figure(dpi=150)
     fig, axes = plt.subplots()
     fig.set_size_inches(5.5, 5)
-    
-    GOES_1MeV = _split_to_data(result,'>=1 MeV')
+
+    GOES_1MeV = _split_to_data(result, '>=1 MeV')
     axes.plot(GOES_1MeV.index, GOES_1MeV['flux'],
-              marker='', color='orange', linewidth=1, label="GOES->1MeV")
-    
-    GOES_10MeV = _split_to_data(result,'>=10 MeV')
+              marker='', color='orange', linewidth=1, label='GOES->1MeV')
+
+    GOES_10MeV = _split_to_data(result, '>=10 MeV')
     axes.plot(GOES_10MeV.index, GOES_10MeV['flux'],
-              marker='', color='red', linewidth=1, label="GOES->10MeV")
-    
-    GOES_50MeV = _split_to_data(result,'>=50 MeV')
+              marker='', color='red', linewidth=1, label='GOES->10MeV')
+
+    GOES_50MeV = _split_to_data(result, '>=50 MeV')
     axes.plot(GOES_50MeV.index, GOES_50MeV['flux'],
-              marker='', color='blue' , linewidth=1, label="GOES->50MeV")
-    
-    GOES_100MeV = _split_to_data(result,'>=100 MeV')
+              marker='', color='blue', linewidth=1, label='GOES->50MeV')
+
+    GOES_100MeV = _split_to_data(result, '>=100 MeV')
     axes.plot(GOES_100MeV.index, GOES_100MeV['flux'],
-              marker='', color='green' , linewidth=1, label="GOES->100MeV")
-    
-    GOES_500MeV = _split_to_data(result,'>=500 MeV')
-    axes.plot(GOES_500MeV.index, GOES_500MeV['flux'], 
-              marker='', color='black' , linewidth=1, label="GOES->500MeV")
+              marker='', color='green', linewidth=1, label='GOES->100MeV')
+
+    GOES_500MeV = _split_to_data(result, '>=500 MeV')
+    axes.plot(GOES_500MeV.index, GOES_500MeV['flux'],
+              marker='', color='black', linewidth=1, label='GOES->500MeV')
 
     axes.set_title('NOAA - GOES Proton Flux (1-minute average)')
-    axes.set_xlabel("Time [UT]")
+    axes.set_xlabel('Time [UT]')
     axes.set_ylabel(r'Flux [$Particles \cdot cm^{-2} s^{-1} sr^{-1} $]')
     plt.yscale('log')
-    plt.ylim([1e-2,1e4])
+    plt.ylim([1e-2, 1e4])
     axes.set_xlim([GOES_1MeV.index[0], GOES_1MeV.index[-1]])
     axes.grid(True, which='minor', linewidth=0.5)
     axes.grid(True, which='major', linewidth=0.5)
@@ -134,25 +136,25 @@ def plot_(result, mode='1-day', type_='GOES-Long_and_Short', outfile='', in_app=
     ygrid[5].set_linewidth(1)
     ygrid[6].set_color('red')
     ygrid[6].set_linewidth(1)
-    
-    axes.xaxis.set_major_formatter(mdates.DateFormatter("%Y\n%b-%d\n%H:%M"))
+
+    axes.xaxis.set_major_formatter(mdates.DateFormatter('%Y\n%b-%d\n%H:%M'))
     fig.autofmt_xdate(bottom=0, rotation=0, ha='center')
 
     # Here it needs some attention of the limits and the class labels
     ax2 = plt.gca().twinx()
     ax2.set_yscale('log')
     ax2.set_ylim(axes.get_ylim())
-    ax2.set_yticklabels(['','','','N \u2192','SEP','\u2190 Y',''],rotation=270,va="center")
-    ax2.set_ylabel('Alert Thresshold',rotation=270,va="bottom")
+    ax2.set_yticklabels(['', '', '', 'N \u2192', 'SEP', '\u2190 Y', ''], rotation=270, va='center')
+    ax2.set_ylabel('Alert Thresshold', rotation=270, va='bottom')
 
     plt.tight_layout()
 
-    #ax2.annotate('@Last Update:' + datetime.now().strftime("%d/%m/%Y %H:%M"),
-    #        xy=(10, 15), xycoords='figure pixels',fontsize=8, color=(0,0,0,0.5))
+    # ax2.annotate('@Last Update:' + datetime.now().strftime("%d/%m/%Y %H:%M"),
+    #              xy=(10, 15), xycoords='figure pixels',fontsize=8, color=(0,0,0,0.5))
     # plt.show()
 
     if outfile != '':
-        save_path = os.path.join(outfile,f'GOES_PROTONS_latest_{mode}.png')
+        save_path = os.path.join(outfile, f'GOES_PROTONS_latest_{mode}.png')
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
 
     if in_app:
@@ -161,6 +163,7 @@ def plot_(result, mode='1-day', type_='GOES-Long_and_Short', outfile='', in_app=
         plt.show()
 
     return plt
+
 
 def produce_plot(mode='1-day', in_app=False):
     """
@@ -173,17 +176,18 @@ def produce_plot(mode='1-day', in_app=False):
     """
     data = _parse_json_file(mode)
     result = _to_dataframe(data)
-    plt = plot_(result,mode,in_app=in_app)
+    plt = plot_(result, mode, in_app=in_app)
 
     return plt
 
 # Check to see if this file is being executed as the "Main" python
 # script instead of being used as a module by some other python script
 # This allows us to use the module which ever way we want.
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-mode', '--mode', default='1-day',
-                        choices=['6-hour','1-day','3-day','7-day'])
+                        choices=['6-hour', '1-day', '3-day', '7-day'])
     args = parser.parse_args()
     produce_plot(mode=args.mode)
-
