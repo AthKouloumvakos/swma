@@ -7,7 +7,7 @@
 ![flake8](https://github.com/AthKouloumvakos/swma/actions/workflows/flake8.yml/badge.svg)
 ![pytest](https://github.com/AthKouloumvakos/swma/actions/workflows/pytest.yml/badge.svg)
 
-Space Weather Monitor Application (SWMA) is an open-source software package that can be used to visualize realtime space weather related data. An online preview of this tool is available at [https://athkouloumvakos.github.io/swma](https://athkouloumvakos.github.io/swma).
+Space Weather Monitor Application (SWMA) is an open-source software package that can be used to visualize realtime space weather related data. A preview of this tool is available in [![Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://swma-tool.streamlitapp.com).
 
 ## 💾 Installation
 
