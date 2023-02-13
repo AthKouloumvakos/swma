@@ -137,7 +137,10 @@ def plot_(result, mode='1-day', type_='GOES-Long_and_Short', outfile='', in_app=
     ygrid[6].set_color('red')
     ygrid[6].set_linewidth(1)
 
-    axes.xaxis.set_major_formatter(mdates.DateFormatter('%Y\n%b-%d\n%H:%M'))
+    locator = mdates.AutoDateLocator(minticks=4, maxticks=8)
+    formatter = mdates.ConciseDateFormatter(locator)
+    axes.xaxis.set_major_locator(locator)
+    axes.xaxis.set_major_formatter(formatter)
     fig.autofmt_xdate(bottom=0, rotation=0, ha='center')
 
     # Here it needs some attention of the limits and the class labels
