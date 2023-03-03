@@ -147,15 +147,16 @@ def plot_(result, mode='1-day', type_='GOES-Long_and_Short', plot_flares=False, 
         # If we want to add flare information:
         # Convert the json data to Dataframe
         result_flare = json_normalize(data_flare)
+
         for index, flare in result_flare.iterrows():
             Time_Flare = pd.to_datetime(flare['max_time'], format='%Y-%m-%dT%H:%M:%SZ')
-            if Time_Flare < tstart:
-                continue
-            axes.plot([Time_Flare, Time_Flare], [1e-9, flare['max_xrlong']], marker='',
-                      color='black', linestyle='dashed', linewidth=1, label='Flare')
-            axes.text(Time_Flare, 1.5*flare['max_xrlong'], flare['max_class'],
-                      horizontalalignment='center',
-                      verticalalignment='center')
+            if (Time_Flare is not None):
+                if (Time_Flare > tstart):
+                    axes.plot([Time_Flare, Time_Flare], [1e-9, flare['max_xrlong']], marker='',
+                              color='black', linestyle='dashed', linewidth=1, label='Flare')
+                    axes.text(Time_Flare, 1.5*flare['max_xrlong'], flare['max_class'],
+                              horizontalalignment='center',
+                              verticalalignment='center')
 
     # Add a color to the classes limits
     ygrid = axes.get_ygridlines()
