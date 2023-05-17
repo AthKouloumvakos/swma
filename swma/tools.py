@@ -44,7 +44,7 @@ def intro():
 
         ----------------------------------------------------------------------
 
-        ### Availiable (near-)real-time monitors 🖵:
+        ### Availiable (near-)real-time monitors:
 
         - Soft x-ray flux (NOAA-GOES)
         - Proton flux (NOAA-GOES)
@@ -223,14 +223,14 @@ def aia_realtime():
         four_.image(image, caption='')
         one_, two_, = st.columns(2)
         image = Image.open(
-                           requests.get('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_HMIIC.jpg',
-                           stream=True).raw
-                           )
+            requests.get('https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_HMIIC.jpg',
+                         stream=True).raw
+        )
         one_.image(image, caption='')
         image = Image.open(
-                           requests.get('http://jsoc.stanford.edu/data/hmi/HARPs_images/latest_nrt.png',
-                           stream=True).raw
-                           )
+            requests.get('http://jsoc.stanford.edu/data/hmi/HARPs_images/latest_nrt.png',
+                         stream=True).raw
+        )
         two_.image(image, caption='')
 
     st.sidebar.button('Refresh')
