@@ -186,7 +186,6 @@ def plot_(result, mode='1-day', type_='GOES-Long_and_Short', plot_flares=False, 
     ax2.yaxis.set_minor_locator(mticker.FixedLocator(centers))
     ax2.set_yticklabels(labels, minor=True)
     ax2.set_yticklabels([])
-    axes.get_shared_x_axes().join(axes, ax2)
     plt.tight_layout()
     # ax2.annotate('@Last Update:' + datetime.now().strftime("%d/%m/%Y %H:%M"),
     #        xy=(10, 15), xycoords='figure pixels',fontsize=8, color=(0,0,0,0.5))
